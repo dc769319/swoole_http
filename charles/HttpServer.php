@@ -10,7 +10,7 @@ class HttpServer extends \Swoole\Http\Server
     /**
      * @var HttpHandler
      */
-    public $httpHandler = null;
+    public $handler = null;
 
     /**
      * @param $server HttpServer
@@ -31,12 +31,11 @@ class HttpServer extends \Swoole\Http\Server
     /**
      * @param HttpServer $server
      * @param int $workerId
-     * @throws \Exception
      */
     public function onWorkerStart(HttpServer $server, int $workerId)
     {
         swoole_set_process_name('charles_http_worker');
-        $this->httpHandler = new HttpHandler();
+        $this->handler = new HttpHandler();
     }
 
     /**
@@ -46,7 +45,7 @@ class HttpServer extends \Swoole\Http\Server
      */
     public function onRequest($request, $response)
     {
-        $this->httpHandler->onRequest($request, $response);
+        $this->handler->handle($request, $response);
     }
 
     /**
@@ -64,7 +63,7 @@ class HttpServer extends \Swoole\Http\Server
     }
 
     /**
-     * @param \Swoole\Http\Server $server
+     * @param HttpServer $server
      * @param int $workerId
      * @param int $workerPid
      * @param int $exitCode
@@ -72,7 +71,7 @@ class HttpServer extends \Swoole\Http\Server
      * @throws \Exception
      */
     public function onWorkerError(
-        \Swoole\Http\Server $server,
+        HttpServer $server,
         int $workerId,
         int $workerPid,
         int $exitCode,

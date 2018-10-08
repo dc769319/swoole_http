@@ -1,14 +1,13 @@
 <?php
-require __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+require __DIR__ . DIRECTORY_SEPARATOR . 'common_set.php';
 
-$host = '127.0.0.1';
-$port = 9951;
-$server = new Charles\HttpServer(
-    $host,
-    $port,
+$server = new Charles\TcpServer(
+    TCP_SERVER_HOST,
+    TCP_SERVER_PORT,
     SWOOLE_PROCESS,
     SWOOLE_SOCK_TCP
 );
+$logPath = APP_PATH . 'logs/swoole_tcp_server.log';
 
 $server->set([
     'daemonize' => 1,
@@ -19,7 +18,10 @@ $server->set([
     'dispatch_mode' => 3,
     'heartbeat_check_interval' => 30,
     'heartbeat_idle_time' => 60,
-    'log_file' => '/Users/charlesdong/Projects/PHP/swoole/swoole_http_server.log'
+    'log_file' => $logPath,
+    'open_eof_check' => true,
+    'package_eof' => PACKAGE_EOF,
+    'package_max_length' => 1024 * 1024 * 1 //1M
 ]);
 
 $server->on('start', [$server, 'onStart']);
@@ -28,7 +30,9 @@ $server->on('managerStart', [$server, 'onManagerStart']);
 
 $server->on('workerStart', [$server, 'onWorkerStart']);
 
-$server->on('request', [$server, 'onRequest']);
+$server->on('connect', [$server, 'onConnect']);
+
+$server->on('receive', [$server, 'onReceive']);
 
 $server->on('close', [$server, 'onClose']);
 

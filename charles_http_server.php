@@ -1,12 +1,9 @@
 <?php
-require __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+require __DIR__ . DIRECTORY_SEPARATOR . 'common_set.php';
 
-define('APP_PATH', __DIR__ . DIRECTORY_SEPARATOR);
-$host = '127.0.0.1';
-$port = 9951;
 $server = new Charles\HttpServer(
-    $host,
-    $port,
+    HTTP_SERVER_HOST,
+    HTTP_SERVER_PORT,
     SWOOLE_PROCESS,
     SWOOLE_SOCK_TCP
 );
