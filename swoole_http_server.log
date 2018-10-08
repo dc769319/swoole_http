@@ -1,7 +1,0 @@
-PHP Warning:  swoole_set_process_name(): swoole_set_process_name is not supported on MacOS. in /Users/charlesdong/Projects/PHP/swoole/charles/HttpServer.php on line 20
-PHP Warning:  swoole_set_process_name(): swoole_set_process_name is not supported on MacOS. in /Users/charlesdong/Projects/PHP/swoole/charles/HttpServer.php on line 40
-PHP Warning:  swoole_set_process_name(): swoole_set_process_name is not supported on MacOS. in /Users/charlesdong/Projects/PHP/swoole/charles/HttpServer.php on line 28
-PHP Warning:  swoole_set_process_name(): swoole_set_process_name is not supported on MacOS. in /Users/charlesdong/Projects/PHP/swoole/charles/HttpServer.php on line 40
-PHP Warning:  swoole_set_process_name(): swoole_set_process_name is not supported on MacOS. in /Users/charlesdong/Projects/PHP/swoole/charles/HttpServer.php on line 40
-PHP Warning:  swoole_set_process_name(): swoole_set_process_name is not supported on MacOS. in /Users/charlesdong/Projects/PHP/swoole/charles/HttpServer.php on line 40
-[2018-10-07 23:49:14 #1390.2]	NOTICE	Server is shutdown now.

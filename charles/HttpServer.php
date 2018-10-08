@@ -57,7 +57,10 @@ class HttpServer extends \Swoole\Http\Server
      */
     public function onClose(HttpServer $server, int $fd, int $reactorId)
     {
-        Log::add(sprintf('fid:%d, reactorId:%d', $fd, $reactorId), 'Http server closed');
+        $this->log(
+            sprintf('fid:%d, reactorId:%d', $fd, $reactorId),
+            'Http server closed'
+        );
     }
 
     /**
@@ -75,7 +78,7 @@ class HttpServer extends \Swoole\Http\Server
         int $exitCode,
         int $signal
     ) {
-        Log::add(
+        $this->log(
             sprintf(
                 'workerId:%d, workerPid:%d, exitCode:%d, signal:%d',
                 $workerId,
@@ -84,6 +87,21 @@ class HttpServer extends \Swoole\Http\Server
                 $signal
             ),
             'Worker error'
+        );
+    }
+
+    /**
+     * 添加日志
+     * @param string $message
+     * @param string $title
+     * @throws \Exception
+     */
+    private function log($message, $title)
+    {
+        Log::add(
+            $message,
+            $title,
+            'logs/http_server.log'
         );
     }
 }

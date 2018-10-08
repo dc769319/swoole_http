@@ -17,6 +17,6 @@ class HttpHandler
             $response->end('Request error');
         }
         $uri = trim($request->server['request_uri']);
-        $response->end(sprintf('Your request uri is "%s"', $uri));
+        $response->end(sprintf('Your request uri is "%s"%s', $uri, PHP_EOL));
     }
 }

@@ -10,7 +10,7 @@ $server = new Charles\HttpServer(
     SWOOLE_PROCESS,
     SWOOLE_SOCK_TCP
 );
-$logPath = APP_PATH . 'swoole_http_server.log';
+$logPath = APP_PATH . 'logs/swoole_http_server.log';
 $server->set([
     'daemonize' => 1,
     'reactor_num' => 2,
