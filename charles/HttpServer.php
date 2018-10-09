@@ -43,7 +43,7 @@ class HttpServer extends \Swoole\Http\Server
      * @param \Swoole\Http\Response $response
      * @throws \Exception
      */
-    public function onRequest($request, $response)
+    public function onRequest(\Swoole\Http\Request $request, \Swoole\Http\Response $response)
     {
         $this->handler->handle($request, $response);
     }
@@ -95,12 +95,12 @@ class HttpServer extends \Swoole\Http\Server
      * @param string $title
      * @throws \Exception
      */
-    private function log($message, $title)
+    private function log(string $message, string $title)
     {
         Log::add(
             $message,
             $title,
-            'logs/http_server.log'
+            'http_server.log'
         );
     }
 }

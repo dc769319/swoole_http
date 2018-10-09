@@ -19,43 +19,45 @@ class TcpHandler
     {
         $data = Protocol::decode($data);
         if (empty($data)) {
-            $this->send($server, $fd, json_encode(['code' => 13000, 'msg' => 'Illegal request']));
+            $this->response($server, $fd, ['code' => 13000, 'msg' => 'Illegal request']);
         }
         $requestData = json_decode($data, true);
         if (!isset($requestData['uri'])) {
-            $this->send($server, $fd, json_encode(['code' => 13001, 'msg' => 'Invalid request uri']));
+            $this->response($server, $fd, ['code' => 13001, 'msg' => 'Invalid request uri']);
         }
+
         switch ($requestData['uri']) {
             case 'user':
-                $uid = isset($requestData['uid']) ? intval($requestData['uid']) : 0;
+                $uid = $requestData['uid'] ?? 0;
                 if (empty($uid)) {
-                    $this->send($server, $fd, json_encode(['code' => 1, 'msg' => 'Empty uid', 'data' => []]));
+                    $this->response($server, $fd, ['code' => 13002, 'msg' => 'Empty uid', 'data' => []]);
                 }
-                $this->send(
-                    $server,
-                    $fd,
-                    json_encode(['code' => 1, 'msg' => 'Success', 'data' => ['name' => 'charles', 'age' => 25]])
-                );
+                $this->response($server, $fd, [
+                    'code' => 1,
+                    'msg' => 'Success',
+                    'data' => ['name' => 'charles', 'age' => 25]
+                ]);
                 break;
             default:
-                $this->send(
-                    $server,
-                    $fd,
-                    json_encode(['code' => 13002, 'msg' => 'Unknown request uri'])
-                );
+                $this->response($server, $fd, [
+                    'code' => 1,
+                    'msg' => 'Success',
+                    'data' => ['code' => 13002, 'msg' => 'Unknown request uri']
+                ]);
                 break;
         }
     }
 
     /**
-     * 向客户端发送数据
+     * 向客户端发送响应数据
      * @param TcpServer $server
      * @param int $fd
-     * @param string $data
+     * @param array $data
      * @return bool
      */
-    private function send(TcpServer $server, int $fd, string $data)
+    private function response(TcpServer $server, int $fd, array $data)
     {
-        return $server->send($fd, Protocol::encode($data));
+        $response = Protocol::encode(json_encode($data));
+        return $server->send($fd, $response);
     }
 }

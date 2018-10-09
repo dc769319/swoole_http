@@ -16,64 +16,69 @@ class HttpHandler
     public function handle(Request $request, Response $response)
     {
         if (!isset($request->server['request_uri'])) {
-            $response->end('Request error');
+            $this->responseRaw('Request error', $response);
         }
         $uri = trim($request->server['request_uri']);
         switch ($uri) {
             case '/user':
-                $id = isset($request->post['id']) ? $request->post['id'] : '';
+                $id = $request->post['id'] ?? '';
                 if (empty($id)) {
-                    $response->end(json_encode(['code' => 14000, 'msg' => 'Invalid param id']));
+                    $this->responseJson(['code' => 14000, 'msg' => 'Invalid param id'], $response);
                 }
-                $client = new \Swoole\Client(SWOOLE_SOCK_TCP);
-                $client->set([
-                    'open_eof_check' => true,
-                    'package_eof' => PACKAGE_EOF
-                ]);
-                if (!$client->connect(TCP_SERVER_HOST, TCP_SERVER_PORT, 10)) {
-                    $errCode = $client->errCode;
-                    $errMsg = socket_strerror($errCode);
-                    $this->log(
-                        sprintf("errCode:%d, errMsg:%s", $errCode, $errMsg),
-                        'TCP Server connect error'
-                    );
-                    $response->end(json_encode(['code' => 15000, 'msg' => 'Server error']));
+                $res = SyncTcpClient::send(json_encode(['uri' => 'user', 'uid' => $id]));
+                if (false === $res) {
+                    $this->responseJson(['code' => 14001, 'msg' => 'Server error'], $response);
                 }
-                $package = Protocol::encode(json_encode(['uri' => 'user', 'uid' => $id]));
-                if (!$client->send($package)) {
-                    $errCode = $client->errCode;
-                    $errMsg = socket_strerror($errCode);
-                    $this->log(
-                        sprintf("errCode:%d, errMsg:%s", $errCode, $errMsg),
-                        'Package send error'
-                    );
-                    $response->end(json_encode(['code' => 15001, 'msg' => 'Server error']));
-                }
-                $result = $client->recv();
-                $this->log(print_r($result, true), 'receive data');
-                if (false === $result) {
-                    $errCode = $client->errCode;
-                    $errMsg = socket_strerror($errCode);
-                    $this->log(
-                        sprintf("errCode:%d, errMsg:%s", $errCode, $errMsg),
-                        'Package receive error'
-                    );
-                    $response->end(json_encode(['code' => 15002, 'msg' => 'Server error']));
-                }
-                //关闭tcp连接
-                $client->close();
-                //解包
-                $res = Protocol::decode($result);
                 $recData = json_decode($res, true);
-                if (empty($recData)) {
-                    $response->end(json_encode(['code' => 15003, 'msg' => 'Server error']));
+                if (empty($recData) || !isset($recData['code'])) {
+                    $this->responseJson(['code' => 14002, 'msg' => 'Server error'], $response);
                 }
-                $response->end(json_encode($recData));
+                if ($recData['code'] != 1) {
+                    //服务端进程返回错误信息，记录日志
+                    $this->log(sprintf('return data: %s', $res), 'server error msg');
+                    $this->responseJson(['code' => 14003, 'msg' => 'Server error'], $response);
+                }
+                $this->responseJson([
+                    'code' => 1,
+                    'msg' => 'Success',
+                    'data' => $recData['data'] ?? []
+                ], $response);
+
+                break;
+            case '/video':
+                $this->responseJson([
+                    'code' => 1,
+                    'msg' => 'Success',
+                    'data' => ['vid' => 1, 'src' => 'https://www.youtube.com/watch?v=5EcPasxxFP4']
+                ], $response);
+
                 break;
             default:
-                $response->end(sprintf('Your request uri is "%s"%s', $uri, PHP_EOL));
+                $this->responseRaw(sprintf('Your request uri is "%s"', $uri), $response);
                 break;
         }
+    }
+
+    /**
+     *
+     * @param string $message
+     * @param Response $response
+     */
+    private function responseRaw(string $message, Response $response)
+    {
+        $response->header("Content-Type", "text/plain; charset=utf-8");
+        $response->end($message . PHP_EOL);
+    }
+
+    /**
+     * json响应
+     * @param array $data
+     * @param Response $response
+     */
+    private function responseJson(array $data, Response $response)
+    {
+        $response->header("Content-Type", "application/json; charset=utf-8");
+        $response->end(json_encode($data) . PHP_EOL);
     }
 
     /**
@@ -82,12 +87,12 @@ class HttpHandler
      * @param string $title
      * @throws \Exception
      */
-    private function log($message, $title)
+    private function log(string $message, string $title)
     {
         Log::add(
             $message,
             $title,
-            'logs/http_handler.log'
+            'http_handler'
         );
     }
 }

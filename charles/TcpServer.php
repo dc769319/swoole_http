@@ -107,12 +107,12 @@ class TcpServer extends \Swoole\Server
      * @param string $title
      * @throws \Exception
      */
-    private function log($message, $title)
+    private function log(string $message, string $title)
     {
         Log::add(
             $message,
             $title,
-            'logs/tcp_server.log'
+            'tcp_server.log'
         );
     }
 }
