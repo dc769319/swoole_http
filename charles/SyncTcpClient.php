@@ -26,7 +26,7 @@ class SyncTcpClient
         ]);
         if (!$client->connect(TCP_SERVER_HOST, TCP_SERVER_PORT, 10)) {
             $errCode = $client->errCode;
-            $errMsg = socket_strerror($errCode);
+            $errMsg = swoole_strerror($errCode);
             Log::add(
                 sprintf("errCode:%d, errMsg:%s", $errCode, $errMsg),
                 'TCP Server connect error',
@@ -37,7 +37,7 @@ class SyncTcpClient
         $package = Protocol::encode($data);
         if (!$client->send($package)) {
             $errCode = $client->errCode;
-            $errMsg = socket_strerror($errCode);
+            $errMsg = swoole_strerror($errCode);
             Log::add(
                 sprintf("errCode:%d, errMsg:%s", $errCode, $errMsg),
                 'Package send error',
@@ -48,7 +48,7 @@ class SyncTcpClient
         $result = $client->recv();
         if (false === $result) {
             $errCode = $client->errCode;
-            $errMsg = socket_strerror($errCode);
+            $errMsg = swoole_strerror($errCode);
             Log::add(
                 sprintf("errCode:%d, errMsg:%s", $errCode, $errMsg),
                 'Package send error',
