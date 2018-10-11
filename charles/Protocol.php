@@ -11,15 +11,16 @@ namespace Charles;
  */
 class Protocol
 {
-    /**
-     * @var string $head 文本协议头部字符串
-     */
-    public static $head = '##CH##';
 
     /**
-     * @var string headBySign 文本协议头部字符串，中间插入标识
+     * 文本协议前缀，左半部分
      */
-    public static $headBySign = '##CH|##';
+    const PRE_LEFT = '##CH';
+
+    /**
+     * 文本协议前缀，右半部分
+     */
+    const PRE_RIGHT = '##';
 
     /**
      * 打包数据
@@ -31,7 +32,7 @@ class Protocol
         if (empty($data)) {
             return $data;
         }
-        return self::$head . $data . PACKAGE_EOF;
+        return self::PRE_LEFT . self::PRE_RIGHT . $data . PACKAGE_EOF;
     }
 
     /**
@@ -44,7 +45,7 @@ class Protocol
         if (empty($data)) {
             return $data;
         }
-        $head = self::$head;
+        $head = self::PRE_LEFT . self::PRE_RIGHT;
         $pattern = "/^$head/";
         if (!preg_match($pattern, $data, $match)) {
             return false;
@@ -63,14 +64,10 @@ class Protocol
      */
     public static function encBySign(string $data, int $sign)
     {
-        $headSign = explode('|', self::$headBySign);
-        if (sizeof($headSign) < 2) {
-            return false;
-        }
         if ($sign < 1) {
             return false;
         }
-        $head = sprintf("%s%d%s", $headSign[0], $sign, $headSign[1]);
+        $head = sprintf("%s%d%s", self::PRE_LEFT, $sign, self::PRE_RIGHT);
         return $head . $data . PACKAGE_EOF;
     }
 
@@ -82,11 +79,7 @@ class Protocol
      */
     public static function decBySign(string $data, int &$sign)
     {
-        $headSign = explode('|', self::$headBySign);
-        if (sizeof($headSign) < 2) {
-            return false;
-        }
-        $headPattern = sprintf("%s(\d+)%s", $headSign[0], $headSign[1]);
+        $headPattern = sprintf("%s(\d+)%s", self::PRE_LEFT, $sign, self::PRE_RIGHT);
         if (!preg_match("/^$headPattern/", $data, $match)) {
             return false;
         }

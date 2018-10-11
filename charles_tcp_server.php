@@ -16,8 +16,8 @@ $server->set([
     'backlog' => 128,   //listen backlog
     'max_request' => 50,
     'dispatch_mode' => 3,
-    'heartbeat_check_interval' => 30,
-    'heartbeat_idle_time' => 60,
+    'heartbeat_check_interval' => 60,
+    'heartbeat_idle_time' => 300,
     'log_file' => $logPath,
     'open_eof_check' => true,
     'package_eof' => PACKAGE_EOF,

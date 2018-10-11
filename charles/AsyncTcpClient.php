@@ -28,7 +28,7 @@ class AsyncTcpClient
     public static $pingTick = null;
 
     /**
-     * @var array events 发送异步请求后，将请求标识保存到
+     * @var array events 发送异步请求后，将请求标识作为key，回调方法作为value
      */
     public static $events = [];
 
@@ -42,7 +42,8 @@ class AsyncTcpClient
      */
     public static function getReqNo()
     {
-        if (self::$reqNo > 2000000000) {
+        if (self::$reqNo > 200000) {
+            //值一旦太大则重置为0
             self::$reqNo = 0;
         }
         return ++self::$reqNo;
@@ -66,9 +67,9 @@ class AsyncTcpClient
         self::$client->on('close', [__CLASS__, 'onClose']);
         self::$client->on('error', [__CLASS__, 'onError']);
         //异步客户端connect方法会立刻返回，不会阻塞
-        self::$client->connect(TCP_SERVER_HOST, TCP_SERVER_PORT, 10);
+        self::$client->connect(TCP_SERVER_HOST, TCP_SERVER_PORT, 5);
         //一段时间后，检查是否已经连接上
-        swoole_timer_after(10000, function () use ($workerId) {
+        swoole_timer_after(5000, function () use ($workerId) {
             if (!self::$client->isConnected()) {
                 //连接超时，记录错误日志
                 Log::add(
@@ -82,14 +83,56 @@ class AsyncTcpClient
 
     /**
      * @param string $data 待发送数据
-     * @return string|bool 服务端进程返回的数据，失败返回false
+     * @param callable $onRecCallback 接收到服务端数据后的回调函数
+     * @throws \Exception
      */
-    public static function send(string $data)
+    public static function send(string $data, callable $onRecCallback)
     {
-        Protocol::encBySign($data);
+        $reqNo = self::getReqNo();
+        self::$events[$reqNo] = $onRecCallback;
+        $packedData = Protocol::encBySign($data, $reqNo);
+        if (!(self::$client->isConnected())) {
+            //如果连接断开，则尝试延时重连并发送
+            swoole_timer_after(500, [__CLASS__, 'resend'], [$packedData, 0]);
+        }
+        if (false === self::$client->send($packedData)) {
+            //发送失败，则记录错误日志
+            self::log(
+                json_encode([
+                    'workerId' => self::$workerId,
+                    'errCode' => self::$client->errCode,
+                    'errMsg' => swoole_strerror(self::$client->errCode)
+                ]),
+                'send error'
+            );
+        }
     }
 
     /**
+     * 重新发送
+     * @param string $packedData
+     * @param int $times
+     * @throws \Exception
+     */
+    private static function resend(string $packedData, int $times)
+    {
+        $times++;
+        if (self::$client->isConnected()) {
+            self::$client->send($packedData);
+        } else {
+            if ($times < 3) {
+                //重新建立连接
+                self::$client->connect(TCP_SERVER_HOST, TCP_SERVER_PORT, 5);
+                swoole_timer_after(500, [__CLASS__, 'resend'], [$packedData, $times]);
+            } else {
+                //重新发送失败，记录错误日志
+                self::log(sprintf('resend times: %d', $times), 'resend failed');
+            }
+        }
+    }
+
+    /**
+     * 建立tcp连接后的回调
      * @param \Swoole\Client $client 异步客户端实例对象
      */
     public static function onConnect(\Swoole\Client $client)
@@ -97,6 +140,7 @@ class AsyncTcpClient
         //建立长连接，每隔一段时间发个包
         if (is_null(self::$pingTick)) {
             self::$pingTick = swoole_timer_tick(60000, function () {
+                self::send('PING');
             });
         }
     }
@@ -121,5 +165,20 @@ class AsyncTcpClient
      */
     public static function onError(\Swoole\Client $client)
     {
+    }
+
+    /**
+     * 记录日志
+     * @param string $message
+     * @param string $title
+     * @throws \Exception
+     */
+    public static function log(string $message, string $title)
+    {
+        Log::add(
+            $message,
+            $title,
+            'async_tcp_client'
+        );
     }
 }
