@@ -160,13 +160,14 @@ class AsyncTcpClient
         if (!is_null($reqNo) && isset(self::$events[$reqNo])) {
             //执行回调函数
             call_user_func_array(self::$events[$reqNo], [$unpackedData]);
-            unset(self::$events[$reqNo]);
         } else {
             self::log(
                 sprintf('workerId:%d, reqNo:%d, data:%d', self::$workerId, $reqNo, $data),
                 'no onReceive callback'
             );
         }
+        //卸载回调方法
+        unset(self::$events[$reqNo]);
     }
 
     /**
@@ -174,6 +175,18 @@ class AsyncTcpClient
      */
     public static function onClose(\Swoole\Client $client)
     {
+        //清除定时器
+        if (!is_null(self::$pingTick)) {
+            swoole_timer_clear(self::$pingTick);
+            self::$pingTick = null;
+        }
+        //记录错误日志
+        self::log(
+            sprintf('workerId:%d', self::$workerId),
+            'asyncTcpClient closed'
+        );
+        //连接被关闭，则重新初始化新的连接
+        self::init(self::$workerId);
     }
 
     /**
@@ -181,6 +194,16 @@ class AsyncTcpClient
      */
     public static function onError(\Swoole\Client $client)
     {
+        //清除定时器
+        if (!is_null(self::$pingTick)) {
+            swoole_timer_clear(self::$pingTick);
+            self::$pingTick = null;
+        }
+        //记录错误日志
+        self::log(
+            sprintf('workerId:%d, errMsg:%s', self::$workerId, swoole_strerror($client->errCode)),
+            'asyncTcpClient error'
+        );
     }
 
     /**
