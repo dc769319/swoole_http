@@ -14,7 +14,6 @@ class SyncTcpClient
     /**
      * @param string $data 待发送数据
      * @return string|bool 服务端进程返回的数据，失败返回false
-     * @throws \Exception
      */
     public static function send(string $data)
     {
@@ -34,7 +33,7 @@ class SyncTcpClient
             );
             return false;
         }
-        $package = Protocol::encode($data);
+        $package = TextProtocol::encode($data);
         if (!$client->send($package)) {
             $errCode = $client->errCode;
             $errMsg = swoole_strerror($errCode);
@@ -59,6 +58,6 @@ class SyncTcpClient
         //关闭tcp连接
         $client->close();
         //服务端进程发送来的数据包，采用统一的协议打包，这里进行解包
-        return Protocol::decode($result);
+        return TextProtocol::decode($result);
     }
 }

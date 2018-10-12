@@ -9,7 +9,7 @@ namespace Charles;
  * @author dongchao
  * @email dongchao@bigo.sg
  */
-class Protocol
+class TextProtocol
 {
 
     /**
@@ -29,9 +29,6 @@ class Protocol
      */
     public static function encode(string $data)
     {
-        if (empty($data)) {
-            return $data;
-        }
         return self::PRE_LEFT . self::PRE_RIGHT . $data . PACKAGE_EOF;
     }
 
@@ -42,18 +39,12 @@ class Protocol
      */
     public static function decode(string $data)
     {
-        if (empty($data)) {
-            return $data;
-        }
         $head = self::PRE_LEFT . self::PRE_RIGHT;
         $pattern = "/^$head/";
-        if (!preg_match($pattern, $data, $match)) {
-            return false;
+        if (preg_match($pattern, $data, $match)) {
+            return trim(substr($data, strlen($match[0])));
         }
-        if (empty($match)) {
-            return false;
-        }
-        return trim(substr($data, strlen($match[0])));
+        return trim($data);
     }
 
     /**
@@ -65,7 +56,7 @@ class Protocol
     public static function encBySign(string $data, int $sign)
     {
         if ($sign < 1) {
-            return false;
+            return $data . PACKAGE_EOF;
         }
         $head = sprintf("%s%d%s", self::PRE_LEFT, $sign, self::PRE_RIGHT);
         return $head . $data . PACKAGE_EOF;
@@ -77,16 +68,13 @@ class Protocol
      * @param int $sign 标识
      * @return bool|string
      */
-    public static function decBySign(string $data, int &$sign)
+    public static function decBySign(string $data, int &$sign = null)
     {
         $headPattern = sprintf("%s(\d+)%s", self::PRE_LEFT, $sign, self::PRE_RIGHT);
-        if (!preg_match("/^$headPattern/", $data, $match)) {
-            return false;
+        if (preg_match("/^$headPattern/", $data, $match)) {
+            $sign = intval($match[1]);
+            return trim(substr($data, strlen($match[0])));
         }
-        if (empty($match) || (sizeof($match) < 2)) {
-            return false;
-        }
-        $sign = intval($match[1]);
-        return trim(substr($data, strlen($match[0])));
+        return trim($data);
     }
 }

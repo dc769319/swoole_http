@@ -52,7 +52,6 @@ class HttpServer extends \Swoole\Http\Server
      * @param HttpServer $server
      * @param int $fd
      * @param int $reactorId
-     * @throws \Exception
      */
     public function onClose(HttpServer $server, int $fd, int $reactorId)
     {
@@ -68,7 +67,6 @@ class HttpServer extends \Swoole\Http\Server
      * @param int $workerPid
      * @param int $exitCode
      * @param int $signal
-     * @throws \Exception
      */
     public function onWorkerError(
         HttpServer $server,
@@ -93,7 +91,6 @@ class HttpServer extends \Swoole\Http\Server
      * 添加日志
      * @param string $message
      * @param string $title
-     * @throws \Exception
      */
     private function log(string $message, string $title)
     {

@@ -17,7 +17,7 @@ class TcpHandler
      */
     public function handle(TcpServer $server, string $data, int $fd, int $reactorId)
     {
-        $data = Protocol::decode($data);
+        $data = TextProtocol::decode($data);
         if (empty($data)) {
             $this->response($server, $fd, ['code' => 13000, 'msg' => 'Illegal request']);
         }
@@ -57,7 +57,7 @@ class TcpHandler
      */
     private function response(TcpServer $server, int $fd, array $data)
     {
-        $response = Protocol::encode(json_encode($data));
+        $response = TextProtocol::encode(json_encode($data));
         return $server->send($fd, $response);
     }
 }

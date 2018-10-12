@@ -64,7 +64,6 @@ class TcpServer extends \Swoole\Server
      * @param TcpServer $server
      * @param int $fd
      * @param int $reactorId
-     * @throws \Exception
      */
     public function onClose(TcpServer $server, int $fd, int $reactorId)
     {
@@ -80,7 +79,6 @@ class TcpServer extends \Swoole\Server
      * @param int $workerPid
      * @param int $exitCode
      * @param int $signal
-     * @throws \Exception
      */
     public function onWorkerError(
         TcpServer $server,
@@ -105,7 +103,6 @@ class TcpServer extends \Swoole\Server
      * 添加日志
      * @param string $message
      * @param string $title
-     * @throws \Exception
      */
     private function log(string $message, string $title)
     {

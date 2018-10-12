@@ -11,7 +11,6 @@ class HttpHandler
      * 处理客户端发送来的Http请求
      * @param Request $request
      * @param Response $response
-     * @throws \Exception
      */
     public function handle(Request $request, Response $response)
     {
@@ -85,7 +84,6 @@ class HttpHandler
      * 记录日志
      * @param string $message
      * @param string $title
-     * @throws \Exception
      */
     private function log(string $message, string $title)
     {

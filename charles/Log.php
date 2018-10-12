@@ -15,19 +15,23 @@ class Log
      * @param string $message
      * @param string $title
      * @param string $logFile 日志文件名称
-     * @throws \Exception
+     * @param string $errMsg 错误信息
+     * @return bool|int
      */
     public static function add(
         string $message,
         string $title,
-        string $logFile
+        string $logFile,
+        string &$errMsg = ''
     ) {
         if (empty($logFile)) {
-            throw new \Exception('Invalid param logPath');
+            $errMsg = 'Invalid param logPath';
+            return false;
         }
         if (strncmp('/', $logFile, 1) !== 0) {
             if (!defined('APP_PATH')) {
-                throw new \Exception('Empty constant APP_PATH');
+                $errMsg = 'Empty constant APP_PATH';
+                return false;
             }
             //去掉末尾的.log
             rtrim($logFile, '.log');
@@ -35,6 +39,6 @@ class Log
         }
         $date = date('[Y-m-d H:i:s]');
         $log = sprintf("%s%s | %s%s", $date, $title, $message, PHP_EOL);
-        file_put_contents($logFile, $log, FILE_APPEND);
+        return file_put_contents($logFile, $log, FILE_APPEND);
     }
 }
