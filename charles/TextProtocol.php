@@ -28,8 +28,11 @@ class TextProtocol
      * @param int $sign 标识
      * @return string
      */
-    public static function encode(string $data, int $sign = 0)
+    public static function encode(string $data, int $sign = null)
     {
+        if ($sign === null || $sign < 1) {
+            return $data . PACKAGE_EOF;
+        }
         $head = sprintf("%s%d%s", self::PRE_LEFT, $sign, self::PRE_RIGHT);
         return $head . $data . PACKAGE_EOF;
     }

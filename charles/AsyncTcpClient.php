@@ -87,7 +87,7 @@ class AsyncTcpClient
     public static function send(string $data, callable $onRecCallback)
     {
         $reqNo = self::getReqNo();
-        $packedData = TextProtocol::encBySign($data, $reqNo);
+        $packedData = TextProtocol::encode($data, $reqNo);
         if (!(self::$client->isConnected())) {
             //如果连接断开，则尝试延时重连并发送
             swoole_timer_after(500, [__CLASS__, 'resend'], [$packedData, 0]);
@@ -156,7 +156,7 @@ class AsyncTcpClient
     {
         self::log($data, 'receive data');
         //解包数据
-        $unpackedData = TextProtocol::decBySign($data, $reqNo);
+        $unpackedData = TextProtocol::decode($data, $reqNo);
         if (!is_null($reqNo) && isset(self::$events[$reqNo])) {
             //执行回调函数
             call_user_func_array(self::$events[$reqNo], [$unpackedData]);
