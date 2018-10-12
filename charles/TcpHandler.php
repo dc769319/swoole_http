@@ -17,7 +17,7 @@ class TcpHandler
      */
     public function handle(TcpServer $server, string $data, int $fd, int $reactorId)
     {
-        $data = TextProtocol::decode($data);
+        $data = TextProtocol::decode($data, $seqNo);
         if (empty($data)) {
             $this->response($server, $fd, ['code' => 13000, 'msg' => 'Illegal request']);
         }
@@ -37,6 +37,9 @@ class TcpHandler
                     'msg' => 'Success',
                     'data' => ['name' => 'charles', 'age' => 25]
                 ]);
+                break;
+            case 'profile':
+                
                 break;
             default:
                 $this->response($server, $fd, [
