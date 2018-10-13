@@ -7,6 +7,13 @@ use Swoole\Http\Response;
 
 class HttpHandler
 {
+    public $workerId = null;
+
+    public function __construct(int $workerId)
+    {
+        $this->workerId = $workerId;
+    }
+
     /**
      * 处理客户端发送来的Http请求
      * @param Request $request
@@ -28,13 +35,13 @@ class HttpHandler
                 if (false === $res) {
                     $this->responseJson(['code' => 14001, 'msg' => 'Server error'], $response);
                 }
+                //服务端进程返回错误信息，记录日志
+                $this->log(sprintf('return data: %s', $res), 'received data');
                 $recData = json_decode($res, true);
                 if (empty($recData) || !isset($recData['code'])) {
                     $this->responseJson(['code' => 14002, 'msg' => 'Server error'], $response);
                 }
                 if ($recData['code'] != 1) {
-                    //服务端进程返回错误信息，记录日志
-                    $this->log(sprintf('return data: %s', $res), 'server error msg');
                     $this->responseJson(['code' => 14003, 'msg' => 'Server error'], $response);
                 }
                 $this->responseJson([
@@ -50,7 +57,33 @@ class HttpHandler
                     'msg' => 'Success',
                     'data' => ['vid' => 1, 'src' => 'https://www.youtube.com/watch?v=5EcPasxxFP4']
                 ], $response);
-
+                break;
+            case '/profile':
+                $id = $request->post['id'] ?? '';
+                if (empty($id)) {
+                    $this->responseJson(['code' => 14000, 'msg' => 'Invalid param id'], $response);
+                }
+                //发送异步非阻塞请求
+                AsyncTcpClient::send(
+                    json_encode(['uri' => 'profile', 'uid' => $id]),
+                    function ($unpackedData) use ($response) {
+                        //接收到服务端数据后执行的回调函数
+                        $recData = json_decode($unpackedData, true);
+                        if (empty($recData) || !isset($recData['code'])) {
+                            $this->responseJson(['code' => 14002, 'msg' => 'Server error'], $response);
+                        }
+                        if ($recData['code'] != 1) {
+                            //服务端进程返回错误信息，记录日志
+                            $this->log(sprintf('return data: %s', $unpackedData), 'server error msg');
+                            $this->responseJson(['code' => 14003, 'msg' => 'Server error'], $response);
+                        }
+                        $this->responseJson([
+                            'code' => 1,
+                            'msg' => 'Success',
+                            'data' => $recData['data'] ?? []
+                        ], $response);
+                    }
+                );
                 break;
             default:
                 $this->responseRaw(sprintf('Your request uri is "%s"', $uri), $response);

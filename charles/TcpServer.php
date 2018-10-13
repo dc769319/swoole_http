@@ -35,7 +35,7 @@ class TcpServer extends \Swoole\Server
     public function onWorkerStart(TcpServer $server, int $workerId)
     {
         swoole_set_process_name('charles_tcp_worker');
-        $this->handler = new TcpHandler();
+        $this->handler = new TcpHandler($workerId);
     }
 
     /**

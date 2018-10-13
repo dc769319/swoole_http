@@ -73,7 +73,7 @@ class AsyncTcpClient
             if (!self::$client->isConnected()) {
                 //连接超时，记录错误日志
                 self::log(
-                    sprintf('worker id: %d', $workerId),
+                    sprintf('workerId: %d', $workerId),
                     'connect timeout'
                 );
             }
@@ -103,6 +103,8 @@ class AsyncTcpClient
                 'send error'
             );
         } else {
+            //记录发送的数据
+            self::log(sprintf("workerId:%d, data:%s", self::$workerId, $packedData), 'send data');
             //数据发送成功，则保存回调函数
             self::$events[$reqNo] = $onRecCallback;
         }
@@ -141,7 +143,7 @@ class AsyncTcpClient
         //建立长连接，每隔一段时间发个包
         if (is_null(self::$pingTick)) {
             self::$pingTick = swoole_timer_tick(60000, function () {
-                self::send('PING', function () {
+                self::send(json_encode(['uri' => 'PING']), function () {
                 });
             });
         }
@@ -154,15 +156,16 @@ class AsyncTcpClient
      */
     public static function onReceive(\Swoole\Client $client, string $data)
     {
-        self::log($data, 'receive data');
+        self::log(sprintf("workerId:%d, data:%s", self::$workerId, $data), 'receive data');
         //解包数据
         $unpackedData = TextProtocol::decode($data, $reqNo);
+        self::log(sprintf("workerId:%d, data:%s", self::$workerId, $unpackedData), 'unpacked receive data');
         if (!is_null($reqNo) && isset(self::$events[$reqNo])) {
             //执行回调函数
             call_user_func_array(self::$events[$reqNo], [$unpackedData]);
         } else {
             self::log(
-                sprintf('workerId:%d, reqNo:%d, data:%d', self::$workerId, $reqNo, $data),
+                sprintf('workerId:%d, reqNo:%d, data:%s', self::$workerId, $reqNo, $data),
                 'no onReceive callback'
             );
         }

@@ -35,7 +35,7 @@ class HttpServer extends \Swoole\Http\Server
     public function onWorkerStart(HttpServer $server, int $workerId)
     {
         swoole_set_process_name('charles_http_worker');
-        $this->handler = new HttpHandler();
+        $this->handler = new HttpHandler($workerId);
         //初始化异步客户端
         AsyncTcpClient::init($workerId);
     }

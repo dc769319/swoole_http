@@ -45,7 +45,7 @@ class TextProtocol
      */
     public static function decode(string $data, int &$sign = null)
     {
-        $headPattern = sprintf("%s(\d+)%s", self::PRE_LEFT, $sign, self::PRE_RIGHT);
+        $headPattern = sprintf("%s(\d+)%s", self::PRE_LEFT, self::PRE_RIGHT);
         if (preg_match("/^$headPattern/", $data, $match)) {
             $sign = intval($match[1]);
             return trim(substr($data, strlen($match[0])));
