@@ -30,11 +30,6 @@ class TcpHandler
             'tcp_handler'
         );
         $data = TextProtocol::decode($data, $seqNo);
-        Log::add(
-            sprintf("workerId:%d, data:%s", $this->workerId, $data),
-            'unpacked data',
-            'tcp_handler'
-        );
         if (empty($data)) {
             $this->response($server, $fd, ['code' => 13000, 'msg' => 'Illegal request']);
         }
@@ -69,6 +64,23 @@ class TcpHandler
             case 'PING':
                 $this->response($server, $fd, [
                     'msg' => 'PONG'
+                ], $seqNo);
+                break;
+            case 'push':
+                //接收pushId
+                $pushId = $requestData['pushId'] ?? null;
+                if (empty($pushId)) {
+                    $this->response($server, $fd, ['code' => 13000, 'msg' => 'Empty pushId', 'data' => []]);
+                }
+                //投递耗时任务给task进程
+                $taskId = $server->task(json_encode(['uri' => 'push', 'pushId' => $pushId]));
+                if (false === $taskId) {
+                    $this->response($server, $fd, ['code' => 13001, 'msg' => 'Push task dispatch failed']);
+                }
+                $this->response($server, $fd, [
+                    'code' => 1,
+                    'msg' => 'Push task dispatch success',
+                    'data' => ['taskId' => $taskId, 'pushId' => $pushId]
                 ], $seqNo);
                 break;
             default:

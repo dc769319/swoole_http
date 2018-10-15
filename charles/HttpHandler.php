@@ -73,8 +73,31 @@ class HttpHandler
                             $this->responseJson(['code' => 14002, 'msg' => 'Server error'], $response);
                         }
                         if ($recData['code'] != 1) {
-                            //服务端进程返回错误信息，记录日志
-                            $this->log(sprintf('return data: %s', $unpackedData), 'server error msg');
+                            $this->responseJson(['code' => 14003, 'msg' => 'Server error'], $response);
+                        }
+                        $this->responseJson([
+                            'code' => 1,
+                            'msg' => 'Success',
+                            'data' => $recData['data'] ?? []
+                        ], $response);
+                    }
+                );
+                break;
+            case '/push':
+                $pushId = $request->post['pushId'] ?? '';
+                if (empty($pushId)) {
+                    $this->responseJson(['code' => 14000, 'msg' => 'Invalid param pushId'], $response);
+                }
+                //发送异步非阻塞请求
+                AsyncTcpClient::send(
+                    json_encode(['uri' => 'push', 'pushId' => $pushId]),
+                    function ($unpackedData) use ($response) {
+                        //接收到服务端数据后执行的回调函数
+                        $recData = json_decode($unpackedData, true);
+                        if (empty($recData) || !isset($recData['code'])) {
+                            $this->responseJson(['code' => 14002, 'msg' => 'Server error'], $response);
+                        }
+                        if ($recData['code'] != 1) {
                             $this->responseJson(['code' => 14003, 'msg' => 'Server error'], $response);
                         }
                         $this->responseJson([

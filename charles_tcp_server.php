@@ -13,6 +13,7 @@ $server->set([
     'daemonize' => 1,
     'reactor_num' => 2,
     'worker_num' => 4,    //worker process num
+    'task_worker_num' => 2,
     'backlog' => 128,   //listen backlog
     'max_request' => 50,
     'dispatch_mode' => 3,
@@ -37,5 +38,9 @@ $server->on('receive', [$server, 'onReceive']);
 $server->on('close', [$server, 'onClose']);
 
 $server->on('workerError', [$server, 'onWorkerError']);
+
+$server->on('task', ['\\Charles\\TaskHandler', 'task']);
+
+$server->on('finish', ['\\Charles\\TaskHandler', 'finish']);
 
 $server->start();
