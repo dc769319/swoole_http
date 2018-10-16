@@ -17,7 +17,10 @@ $server->set([
     'dispatch_mode' => 3,
     'heartbeat_check_interval' => 30,
     'heartbeat_idle_time' => 60,
-    'log_file' => $logPath
+    'log_file' => $logPath,
+    'chroot' => '/tmp/root', //切换到安全的目录
+    'user' => 'www-data', //worker进程所属用户
+    'group' => 'www-data' //worker进程所属组
 ]);
 
 $server->on('start', [$server, 'onStart']);

@@ -22,7 +22,10 @@ $server->set([
     'log_file' => $logPath,
     'open_eof_check' => true,
     'package_eof' => PACKAGE_EOF,
-    'package_max_length' => 1024 * 1024 * 1 //1M
+    'package_max_length' => 1024 * 1024 * 1, //1M
+    'chroot' => '/tmp/root', //切换到安全的目录
+    'user' => 'www-data', //worker进程所属用户
+    'group' => 'www-data' //worker进程所属组
 ]);
 
 $server->on('start', [$server, 'onStart']);
